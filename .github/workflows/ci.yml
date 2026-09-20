@@ -1,0 +1,136 @@
+# =============================================================================
+# CI Brain-Master
+#
+# Dos objetivos:
+#   1. 🛡️ Guardia — falla si se commitea basura: binarios (.exe, .dll, modelos,
+#      DBs…), node_modules, dist/.angular, cachés de test, .env reales o
+#      cualquier archivo > 1 MB.
+#   2. Builds — compila y testea las tres capas del stack en runners gratis:
+#      Go (gateway), Angular (front) y Python (worker con motor mock, sin GPU).
+#
+# Notas:
+#   - Los e2e de Playwright (frontend/e2e) quedan fuera por peso (navegadores +
+#     app viva); corren local con `npm run test:e2e`.
+#   - test_diffusers_real se auto-salta sin BM_TEST_REAL: no descarga pesos.
+# =============================================================================
+
+name: CI Brain-Master
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # 1 · Guardia anti-basura: el repo solo contiene código fuente
+  # ───────────────────────────────────────────────────────────────────────────
+  guardia:
+    name: 🛡️ Guardia — sin binarios/dependencias/artefactos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verificar archivos trackeados
+        run: |
+          set -uo pipefail
+          fallas=0
+
+          # Binarios compilados, modelos de IA, DBs runtime, logs y directorios
+          # de dependencias/build/cachés. Se permite .gitkeep (placeholders).
+          prohibidos='(^|/)(node_modules|dist|\.angular|\.freebuff|test-results|playwright-report|blob-report|__pycache__|\.pytest_cache|\.venv|outputs)(/|$)|\.(exe|dll|so|dylib|bin|onnx|safetensors|ckpt|pt|pth|gguf|npy|npz|h5|pkl|db|sqlite|sqlite3|zip|tar|gz|tgz|7z|rar|log|tmp|bak|swp|py[co]|test)$|coverage\.(txt|out)$'
+
+          if git ls-files | grep -Ev '(^|/)\.gitkeep$' | grep -E "$prohibidos"; then
+            echo "::error::Archivos prohibidos trackeados (lista arriba). Eliminalos con 'git rm --cached <archivo>' y reforzá el .gitignore."
+            fallas=1
+          fi
+
+          # Archivos .env reales (el .env.example está permitido).
+          if git ls-files | grep -E '(^|/)\.env($|\.)' | grep -Ev '(^|/)\.env\.example$'; then
+            echo "::error::Un .env real está trackeado. Los secretos van en GitHub Secrets; el ejemplo vive en .env.example."
+            fallas=1
+          fi
+
+          # Red de seguridad: cualquier archivo trackeado > 1 MB falla, aunque
+          # use una extensión permitida (atrapa binarios disfrazados).
+          grandes=$(git ls-files -z | xargs -0 du -k 2>/dev/null | awk '$1 >= 1024 {print $2}')
+          if [ -n "$grandes" ]; then
+            echo "::error::Archivos trackeados de más de 1 MB (usa releases/LFS o un volumen para pesos):"
+            echo "$grandes"
+            fallas=1
+          fi
+
+          exit "$fallas"
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 2 · Capa 2 — Gateway Go: compila, vetea y corre tests (SQLite y gRPC
+  #     internos con fakeworker; no necesita GPU ni worker externo)
+  # ───────────────────────────────────────────────────────────────────────────
+  backend:
+    name: 🔙 Backend Go — build + vet + test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - run: go build ./...
+      - run: go vet ./...
+      - run: go test ./...
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 3 · Capa 1 — Frontend Angular: tests unitarios (vitest) y build de
+  #     producción. La app habla con URLs relativas; no hace falta backend.
+  # ───────────────────────────────────────────────────────────────────────────
+  frontend:
+    name: 🎨 Frontend Angular — test + build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 4 · Capa 3 — Worker Python: suite completa con motor mock (sin GPU ni
+  #     pesos). Se pre-instala torch CPU (wheel liviana) para que las deps de
+  #     IA no bajen la wheel CUDA de ~2 GB. test_diffusers_real se salta solo.
+  # ───────────────────────────────────────────────────────────────────────────
+  worker:
+    name: 🧠 Worker Python — pytest (mock)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: inference-worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: inference-worker/requirements.txt
+      - run: pip install --index-url https://download.pytorch.org/whl/cpu torch
+      - run: pip install -r requirements.txt pytest pytest-asyncio
+      - run: pytest
+        env:
+          BM_FORCE_MOCK: '1'
