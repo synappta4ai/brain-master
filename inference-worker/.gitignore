@@ -35,3 +35,6 @@ temp/
 
 # Jupyter Notebooks checkpoints
 .ipynb_checkpoints
+
+# Caché de pytest
+.pytest_cache/

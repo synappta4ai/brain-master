@@ -23,6 +23,7 @@ pnpm-debug.log*
 
 # Logs del servidor de desarrollo local
 ng-serve.log*
+ng-serve-*.log
 
 # Configuraciones de editores / IDEs
 .vscode/*
@@ -39,6 +40,12 @@ ng-serve.log*
 
 # Cobertura de pruebas
 /coverage
+
+# Resultados de Playwright / Vitest
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache
 
 # Archivos de entorno local
 .env
