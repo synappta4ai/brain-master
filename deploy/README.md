@@ -67,17 +67,22 @@ local (modo monolito docker-compose, que comparte el volumen `outputs`).
    celdas 1-4.
 2. Túneles: **bore** (TCP puro, sin registro) para gRPC → `bore.pub:<puerto>`;
    **cloudflared** para el artifact server HTTP.
-3. La celda 4 imprime:
+3. La celda 4 imprime las variables **y las publica sola en un topic efímero
+   de ntfy.sh** (auto-announce, cero copy/paste):
    ```
    PYTHON_WORKER_HOST=bore.pub:<puerto>
    BM_WORKER_ARTIFACT_BASE=https://<tunel>.trycloudflare.com
+   ntfy.topic = bm-<hex>
    ```
-4. En tu máquina: `deploy/colab/connect-gateway.ps1 -WorkerHost "bore.pub:PORT"
-   -ArtifactBase "https://..."` — reinicia el gateway, verifica health,
-   catálogo y lanza un job de prueba con `artifact_url` descargable.
+4. En tu máquina: `deploy/colab/connect-gateway.ps1 -NtfyTopic "bm-<hex>"`
+   — consume el topic, reinicia el gateway con las variables correctas,
+   verifica health, catálogo y lanza un job de prueba con `artifact_url`
+   descargable. Modo manual (si ntfy no estuviera disponible):
+   `-WorkerHost "bore.pub:PORT" -ArtifactBase "https://..."`.
 
 **Límites**: sesión de ~horas (se corta al cerrar la pestaña). Al reconectar
-re-ejecuta la celda 4 (nuevo puerto/URL) y vuelve a correr el ps1. Las celdas
+re-ejecuta la celda 4 (nuevo puerto/URL/topic ntfy) y corre de nuevo el ps1
+con el topic nuevo. Las celdas
 5-6 verifican el catálogo y los túneles desde fuera, igual que lo hará el
 gateway. El smoke test genera una imagen SD-Tiny-Test real en la T4.
 

@@ -1,23 +1,47 @@
-# =============================================================================
+﻿# =============================================================================
 # connect-gateway.ps1 — apunta el gateway local al worker de Colab (T4)
 #
 # Uso (después de ejecutar la celda 4 del notebook):
+#   .\deploy\colab\connect-gateway.ps1 -NtfyTopic "bm-ab12cd34"
+#
+#   O modo manual con las dos variables impresas por la celda 4:
 #   .\deploy\colab\connect-gateway.ps1 -WorkerHost "bore.pub:50051" `
 #                                       -ArtifactBase "https://xxx.trycloudflare.com"
 #
 # Qué hace:
-#   1. Reinicia el gateway con PYTHON_WORKER_HOST y BM_WORKER_ARTIFACT_BASE
-#   2. Verifica /api/v1/health (worker_connected: true) y /api/v1/models
-#   3. Crea un job de prueba y espera el artifact_url descargable
+#   1. (-NtfyTopic) Consume el topic ntfy.sh publicado por la celda 4 y
+#      obtiene las variables sola (cero copy/paste)
+#   2. Reinicia el gateway con PYTHON_WORKER_HOST y BM_WORKER_ARTIFACT_BASE
+#   3. Verifica /api/v1/health (worker_connected: true) y /api/v1/models
+#   4. Crea un job de prueba y espera el artifact_url descargable
 # =============================================================================
 param(
-  [Parameter(Mandatory = $true)][string]$WorkerHost,
-  [Parameter(Mandatory = $true)][string]$ArtifactBase
+  [string]$NtfyTopic,
+  [string]$WorkerHost,
+  [string]$ArtifactBase
 )
 
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)   # brain-master/
 $backend = Join-Path $repo "backend"
+
+# --- Resolver variables: modo auto-announce (ntfy) o manual -----------------
+if ($NtfyTopic) {
+  Write-Host "» Auto-announce: consumiendo ntfy.sh/$NtfyTopic..." -ForegroundColor Cyan
+  $deadlineAnn = (Get-Date).AddSeconds(30)
+  do {
+    try { $ann = Invoke-RestMethod "https://ntfy.sh/$NtfyTopic/json?poll=1" -TimeoutSec 10 } catch { $ann = $null }
+    $msg = $ann | Where-Object { $_.event -eq "message" } | Select-Object -First 1
+    if (-not $msg) { Start-Sleep 3 }
+  } while (-not $msg -and (Get-Date) -lt $deadlineAnn)
+  if (-not $msg) { throw "no hay mensaje en ntfy.sh/$NtfyTopic : re-ejecuta la celda 4 en Colab y copia el ntfy.topic nuevo" }
+  $WorkerHost   = ($msg.message | ConvertFrom-Json).PYTHON_WORKER_HOST
+  $ArtifactBase = ($msg.message | ConvertFrom-Json).BM_WORKER_ARTIFACT_BASE
+  Write-Host "  variables recibidas: $WorkerHost | $ArtifactBase" -ForegroundColor Green
+}
+if (-not $WorkerHost -or -not $ArtifactBase) {
+  throw "falta configuración: usa -NtfyTopic <topic>  o  -WorkerHost + -ArtifactBase"
+}
 
 Write-Host "» Deteniendo gateway previo..." -ForegroundColor Cyan
 $conn = Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue
