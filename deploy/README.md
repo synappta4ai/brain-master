@@ -74,15 +74,18 @@ local (modo monolito docker-compose, que comparte el volumen `outputs`).
    BM_WORKER_ARTIFACT_BASE=https://<tunel>.trycloudflare.com
    ntfy.topic = bm-<hex>
    ```
-4. En tu máquina: `deploy/colab/connect-gateway.ps1 -NtfyTopic "bm-<hex>"`
-   — consume el topic, reinicia el gateway con las variables correctas,
-   verifica health, catálogo y lanza un job de prueba con `artifact_url`
-   descargable. Modo manual (si ntfy no estuviera disponible):
-   `-WorkerHost "bore.pub:PORT" -ArtifactBase "https://..."`.
+4. En tu máquina, dos opciones (ambas reinician el gateway, verifican health,
+   catálogo y lanzan un job de prueba con `artifact_url` descargable):
+   - **Watcher automático (recomendado)**: `py -3 deploy/colab/watch-announce.py`
+     (o `watch-announce.ps1`) escucha el topic fijo `bm-brain-master-tunnels-v1`
+     — donde la celda 4 publica — y reconecta el gateway solo ante cada
+     announce nuevo. Cero comandos tras cada reconexión de Colab.
+   - **Manual**: `connect-gateway.ps1 -NtfyTopic "<topic>"` con el topic
+     impreso, o `-WorkerHost "bore.pub:PORT" -ArtifactBase "https://..."`.
 
 **Límites**: sesión de ~horas (se corta al cerrar la pestaña). Al reconectar
-re-ejecuta la celda 4 (nuevo puerto/URL/topic ntfy) y corre de nuevo el ps1
-con el topic nuevo. Las celdas
+re-ejecuta la celda 4 (nuevo puerto/URL): con el watcher corriendo la
+reconexión es automática; con el ps1, corre el comando de nuevo. Las celdas
 5-6 verifican el catálogo y los túneles desde fuera, igual que lo hará el
 gateway. El smoke test genera una imagen SD-Tiny-Test real en la T4.
 
