@@ -23,6 +23,12 @@ Write-Host "» Deteniendo gateway previo..." -ForegroundColor Cyan
 $conn = Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue
 if ($conn) { Stop-Process -Id $conn[0].OwningProcess -Force; Start-Sleep 2 }
 
+Write-Host "» Recompilando gateway (evita el binario viejo sin features)…" -ForegroundColor Cyan
+Push-Location $backend
+go build -o gateway.exe .
+if ($LASTEXITCODE -ne 0) { Pop-Location; throw "go build falló" }
+Pop-Location
+
 Write-Host "» Levantando gateway → worker $WorkerHost (artefactos: $ArtifactBase)" -ForegroundColor Cyan
 $env:PYTHON_WORKER_HOST = $WorkerHost
 $env:BM_WORKER_ARTIFACT_BASE = $ArtifactBase
