@@ -47,6 +47,13 @@ class ArtifactHandler(BaseHTTPRequestHandler):
     server_version = "BrainMasterArtifacts/1.0"
 
     def do_GET(self) -> None:  # noqa: N802 (API del stdlib)
+        self._serve(include_body=True)
+
+    def do_HEAD(self) -> None:  # noqa: N802 (API del stdlib)
+        # HEAD: mismos headers que GET sin el cuerpo (probes del ps1, etc.)
+        self._serve(include_body=False)
+
+    def _serve(self, include_body: bool) -> None:
         parsed = urlparse(self.path)
         if parsed.path == "/healthz":
             self._send_json(200, {"status": "ok"})
@@ -88,7 +95,8 @@ class ArtifactHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(payload)))
         self.send_header("Cache-Control", "public, max-age=86400")
         self.end_headers()
-        self.wfile.write(payload)
+        if include_body:
+            self.wfile.write(payload)
 
     # ------------------------------------------------------------------
     def _token_ok(self, provided: str) -> bool:
