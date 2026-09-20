@@ -26,20 +26,27 @@
         optionLabel="label"
         optionValue="value"
         class="w-full">
-        <ng-template pTemplate="option" let-option>
+        <!-- PrimeNG 21: los nombres de plantilla son 'item' (opciones) y
+             'selectedItem' (valor cerrado). 'option'/'value' caen al default
+             y la del valor seleccionado pisa a la de opciones (bug de labels
+             duplicados). -->
+        <ng-template pTemplate="item" let-option>
           <span class="flex items-center gap-2">
             {{ option.label }}
             @if (option.badge) {
-              <p-tag [value]="option.badge" severity="success" class="text-[10px]" />
+              <p-tag [value]="option.badge" [severity]="option.badge === 'V1' ? 'warn' : 'success'" class="text-[10px]" />
+            }
+            @if (option.vramGb) {
+              <span class="text-[10px] opacity-60">· {{ option.vramGb }} GB</span>
             }
           </span>
         </ng-template>
-        <ng-template pTemplate="value" let-selected>
+        <ng-template pTemplate="selectedItem">
           @if (selectedModelSpec(); as spec) {
             <span class="flex items-center gap-2">
               {{ spec.label }}
               @if (spec.badge) {
-                <p-tag [value]="spec.badge" severity="success" class="text-[10px]" />
+                <p-tag [value]="spec.badge" [severity]="spec.badge === 'V1' ? 'warn' : 'success'" class="text-[10px]" />
               }
             </span>
           }
