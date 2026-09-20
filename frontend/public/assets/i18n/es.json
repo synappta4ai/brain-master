@@ -1,0 +1,118 @@
+{
+  "NAV": {
+    "STUDIO": "Studio",
+    "DIRECTOR": "Director Mode",
+    "EDITOR": "Editor de Timeline",
+    "LORAS": "LoRAs y CivitAI",
+    "JOBS": "Jobs"
+  },
+  "HEADER": {
+    "CONNECTED": "Go Gateway Conectado",
+    "OFFLINE": "Go Gateway Offline"
+  },
+  "SETTINGS": {
+    "TITLE": "Apariencia",
+    "THEME": "Tema",
+    "DARK": "Oscuro",
+    "LIGHT": "Claro",
+    "PALETTE": "Paleta de color",
+    "LANGUAGE": "Idioma",
+    "PALETTES": {
+      "AMBER": "Ámbar",
+      "EMERALD": "Esmeralda",
+      "BLUE": "Azul",
+      "VIOLET": "Violeta",
+      "ROSE": "Rosa",
+      "TEAL": "Teal"
+    }
+  },
+  "STUDIO": {
+    "TITLE": "Studio Mode",
+    "ENHANCE": "Mejorar",
+    "ENHANCE_TIP": "Mejorar prompt con el LLM del worker (gRPC)",
+    "VIDEO": "Video",
+    "IMAGE": "Imagen",
+    "MODEL": "Modelo Generativo",
+    "PROMPT": "Prompt Positivo",
+    "PROMPT_PLACEHOLDER": "Describe lo que deseas generar...",
+    "NEGATIVE": "Prompt Negativo",
+    "NEGATIVE_PLACEHOLDER": "Elementos no deseados...",
+    "DURATION": "Duración (s)",
+    "FPS": "FPS",
+    "GENERATE": "Generar en GPU"
+  },
+  "GPU": {
+    "TITLE": "Telemetría GPU (Worker Python)",
+    "FREE_VRAM": "VRAM Libre",
+    "TOTAL_VRAM": "VRAM Total",
+    "UTILIZATION": "Utilización",
+    "UNAVAILABLE": "Worker Python no conectado — arranca server.py para ver la telemetría."
+  },
+  "JOBS": {
+    "TITLE": "Historial de Jobs",
+    "ACTIVE": "activos",
+    "REFRESH": "Refrescar",
+    "FILTER_ALL": "Todos los estados",
+    "STATUS_QUEUED": "En cola",
+    "STATUS_PROCESSING": "Procesando",
+    "STATUS_COMPLETED": "Completado",
+    "STATUS_FAILED": "Fallido",
+    "STATUS_CANCELLED": "Cancelado",
+    "COL_ID": "ID",
+    "COL_STATUS": "Estado",
+    "COL_PROGRESS": "Progreso",
+    "COL_MODEL": "Modelo",
+    "COL_PROMPT": "Prompt",
+    "COL_CREATED": "Creado",
+    "COL_COMPLETED": "Completado",
+    "COL_MODE": "Modo",
+    "COL_ACTIONS": "Acciones",
+    "CANCEL": "Cancelar job",
+    "DOWNLOAD": "Descargar output",
+    "EMPTY": "Sin jobs todavía. Genera algo desde el Studio.",
+    "DETAIL_TITLE": "Detalle del Job"
+  },
+  "MONITOR": {
+    "TITLE": "Monitor de Inferencia en Vivo",
+    "EMPTY": "No hay tareas en ejecución. Haz clic en \"Generar en GPU\" para iniciar.",
+    "PROGRESS": "Progreso",
+    "MODEL": "Modelo",
+    "GENERATED": "✅ Generación completada: {{path}}"
+  },
+  "DIRECTOR": {
+    "TITLE": "Director Mode (Shot & Beat Planner)",
+    "SUBTITLE": "Planificación cinemática asistida por LLM para videos musicales y cortometrajes con continuidad.",
+    "ANALYZE": "Analizar BPM y Audio",
+    "WRITE": "Escribir Guion con LLM",
+    "BPM": "BPM Detectado",
+    "STRUCTURE": "Estructura",
+    "STRUCTURE_VALUE": "Intro → Verso 1 → Coro",
+    "CUTS": "Cortes Sincronizados con el Beat",
+    "SHOTS": "Plan de Tomas del Director (Multi-Clip)",
+    "SHOT_NUMBER": "Toma #{{id}}",
+    "SHOT_DURATION": "{{n}}s duración",
+    "GENERATE_SHOT": "Generar Toma"
+  },
+  "EDITOR": {
+    "TITLE": "Timeline Editor Multipista",
+    "PLAY": "Reproducir",
+    "PAUSE": "Pausar",
+    "SPLIT": "Dividir Clip",
+    "EXPORT": "Exportar (H.264/AV1)",
+    "PREVIEW": "Vista Previa del Render (1080p 60fps)",
+    "MEDIA_POOL": "Media Pool del Proyecto"
+  },
+  "LORAS": {
+    "SEARCH_PLACEHOLDER": "Buscar LoRAs en CivitAI y HuggingFace (estilos, personajes, iluminación)...",
+    "ALL_CATEGORIES": "Todas las Categorías",
+    "STYLE": "Estilo Visual",
+    "CHARACTER": "Personajes",
+    "LIGHTING": "Iluminación Cinemática",
+    "REFRESH": "Actualizar Catálogo",
+    "DOWNLOADS": "Descargas",
+    "SUGGESTED_WEIGHT": "Peso sugerido",
+    "TRIGGER_WORDS": "Trigger Words",
+    "INSTALL": "Instalar LoRA",
+    "ACTIVE": "Activo"
+  }
+}

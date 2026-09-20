@@ -1,0 +1,54 @@
+# =============================================================================
+# Worker en Fly.io con GPU (a10g / l40s) — máquina dedicada
+#
+#   cd brain-master/deploy/fly
+#   fly launch --no-deploy --name brainmaster-worker --copy-config
+#   fly secrets set BM_ARTIFACT_TOKEN=<token-opcional>
+#   fly deploy
+#
+# La app expone:
+#   50051 → gRPC (en el gateway: PYTHON_WORKER_HOST=tls://brainmaster-worker.fly.dev:50051)
+#   50052 → artifact server HTTP público (BM_WORKER_ARTIFACT_BASE=https://brainmaster-worker.fly.dev)
+#
+# Coste: las GPU de Fly NO son gratuitas (a10g ≈ $2.5/h). La app en sí puede
+# quedarse apagada (fly machine stop) y encenderse solo para generar.
+# =============================================================================
+
+app = "brainmaster-worker"
+primary_region = "mia"
+
+[build]
+  dockerfile = "../../inference-worker/Dockerfile"
+
+[env]
+  GRPC_PORT = "50051"
+  BM_ARTIFACT_PORT = "50052"
+  BM_OUTPUT_DIR = "/app/outputs"
+  HF_HOME = "/data/hf"
+
+# gRPC sobre TLS terminado por Fly (el gateway conecta con tls://)
+[[services]]
+  protocol = "tcp"
+  internal_port = 50051
+  [[services.ports]]
+    port = 50051
+    handlers = ["tls"]
+
+# Artifact server HTTP público
+[[services]]
+  protocol = "tcp"
+  internal_port = 50052
+  [[services.ports]]
+    port = 50052
+    handlers = ["http"]
+
+[[vm]]
+  size = "a10g"          # GPU NVIDIA A10G 24 GB
+  memory = "48gb"
+  gpus = 1
+  cpu_kind = "performance"
+  cpus = 8
+
+[mounts]
+  source = "models_cache"
+  destination = "/data"

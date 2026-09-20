@@ -1,0 +1,38 @@
+# =============================================================================
+# Override CPU puro — 24/7 sin GPU (Oracle Cloud Always Free, cualquier VPS)
+#
+#   docker compose -f docker-compose.yml -f deploy/cpu/compose.cpu.yml up -d
+#
+# Quita la reserva de GPU del worker y limita recursos. Válido para:
+#   - Oracle Cloud Always Free (ARM Ampere A1: 4 OCPU / 24 GB RAM gratis)
+#   - Cualquier VPS / hobbyist box
+#
+# Con CPU: usa modelos "tiny" (SD-Tiny-Test ~30 s/imagen). SD-1.5 tarda
+# minutos. Los modelos de video (Wan/LTX) NO son viables en CPU.
+#
+# ⚠️ En ARM (Oracle A1) la imagen base del worker (cuda runtime) no sirve:
+#    usa deploy/cpu/Dockerfile.cpu (torch CPU multi-arquitectura).
+# =============================================================================
+
+services:
+  python-inference:
+    build:
+      context: ./inference-worker
+      dockerfile: ../deploy/cpu/Dockerfile.cpu
+    environment:
+      - GRPC_PORT=50051
+      - BM_OUTPUT_DIR=/app/outputs
+      - HF_HOME=/models-cache/huggingface
+      - TORCH_HOME=/models-cache/torch
+      # En CPU conviene forzar fp32 y desactivar offload CUDA
+      - CUDA_VISIBLE_DEVICES=""
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 20g
+
+  backend-gateway:
+    environment:
+      - PORT=8080
+      - PYTHON_WORKER_HOST=python-inference:50051

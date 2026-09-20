@@ -1,0 +1,80 @@
+version: '3.8'
+
+# =============================================================================
+# Brain-Master — stack desplegable (plataforma GPU: Runpod / Vast / Lambda /
+# EC2 g5 / estación local con NVIDIA Container Toolkit)
+#
+#   docker compose up -d --build
+#
+# El worker expone :50051 (gRPC), el gateway :8080 (REST+WS) y el front :4200.
+# Volúmenes clave:
+#   hf-cache  → pesos de HuggingFace (persistente, sobrevive reinicios)
+#   outputs   → artefactos generados (PNG/MP4/WAV)
+#   v1-models → OPCIONAL: monta el árbol app/models de la V1 para activar las
+#               familias bridge (LTX-2.5 22B, MiniMax-H3, Kandinsky5…)
+# =============================================================================
+
+services:
+  # Capa 1: Frontend Angular (nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend-gateway
+    restart: unless-stopped
+
+  # Capa 2: API Gateway y Orquestador en Go
+  backend-gateway:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      # Local/docker: worker interno. Despliegue dividido (Colab/Kaggle/Fly):
+      # exporta PYTHON_WORKER_HOST=tls://<host>:443 y
+      # BM_WORKER_ARTIFACT_BASE=https://<tunel-artefactos>
+      - PYTHON_WORKER_HOST=${PYTHON_WORKER_HOST:-python-inference:50051}
+      - BM_WORKER_ARTIFACT_BASE=${BM_WORKER_ARTIFACT_BASE:-}
+    volumes:
+      - outputs:/app/outputs
+    depends_on:
+      - python-inference
+    restart: unless-stopped
+
+  # Capa 3: Motor de Inferencia en Python (GPU)
+  python-inference:
+    build:
+      context: ./inference-worker
+      dockerfile: Dockerfile
+    environment:
+      - GRPC_PORT=50051
+      - BM_OUTPUT_DIR=/app/outputs
+      - HF_HOME=/models-cache/huggingface
+      - TORCH_HOME=/models-cache/torch
+      # Artifact server (lo consume el gateway cuando el worker es remoto)
+      - BM_ARTIFACT_PORT=${BM_ARTIFACT_PORT:-50052}
+      - BM_ARTIFACT_TOKEN=${BM_ARTIFACT_TOKEN:-}
+      # Descomenta para forzar el motor mock (diagnóstico sin pesos):
+      # - BM_FORCE_MOCK=1
+    volumes:
+      - outputs:/app/outputs
+      - hf-cache:/models-cache
+      # Opcional: activa las familias con código propietario de la V1
+      # - ./v1-models:/models:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+volumes:
+  outputs:
+  hf-cache:

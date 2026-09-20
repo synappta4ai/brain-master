@@ -1,0 +1,33 @@
+# =============================================================================
+# Worker CPU multi-arquitectura (amd64 + arm64) — Oracle Always Free / VPS
+#   docker build -f deploy/cpu/Dockerfile.cpu -t brainmaster-worker:cpu ./inference-worker
+# =============================================================================
+
+FROM python:3.11-slim
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    HF_HOME=/models-cache/huggingface \
+    TORCH_HOME=/models-cache/torch
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg git curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# PyTorch CPU (índice oficial CPU, sirve para amd64 y arm64)
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+    && pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+RUN mkdir -p /app/outputs /models-cache
+VOLUME ["/app/outputs", "/models-cache"]
+
+EXPOSE 50051 50052
+
+CMD ["python", "server.py"]

@@ -1,0 +1,43 @@
+# Brain-Master Root .gitignore
+
+# Entornos y secretos
+.env
+.env.*
+!.env.example
+
+# Node / Angular
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# Go
+backend/*.exe
+backend/brain-master-server
+backend/outputs/*
+!backend/outputs/.gitkeep
+
+# Python / IA Models
+inference-worker/__pycache__/
+inference-worker/.venv/
+inference-worker/models/
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.gguf
+
+# Logs y SO
+*.log
+.DS_Store
+Thumbs.db
+
+# Base de datos runtime
+backend/brain-master.db
+backend/brain-master.db-shm
+backend/brain-master.db-wal
+
+# Logs
+*.log
+worker-err.log
+gateway-err.log
+ng-serve*.log

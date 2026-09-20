@@ -1,0 +1,148 @@
+<section class="flex flex-col gap-4">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <h2 class="m-0 text-lg font-bold">📋 {{ 'JOBS.TITLE' | translate }}</h2>
+      @if (activeCount() > 0) {
+        <p-tag [value]="activeCount() + ' ' + ('JOBS.ACTIVE' | translate)" severity="warn" [rounded]="true" />
+      }
+    </div>
+
+    <div class="flex items-center gap-2">
+      <p-select
+        [ngModel]="statusFilter()"
+        (ngModelChange)="statusFilter.set($event)"
+        [options]="statusOptions"
+        optionLabel="label"
+        optionValue="value"
+        [placeholder]="'JOBS.FILTER_ALL' | translate"
+        styleClass="w-44">
+        <ng-template pTemplate="selectedItem" let-option>
+          {{ option?.label | translate }}
+        </ng-template>
+        <ng-template pTemplate="item" let-option>
+          {{ option.label | translate }}
+        </ng-template>
+      </p-select>
+
+      <p-button
+        icon="pi pi-refresh"
+        [rounded]="true"
+        [text]="true"
+        (onClick)="refresh()"
+        pTooltip="{{ 'JOBS.REFRESH' | translate }}"
+        tooltipPosition="left" />
+    </div>
+  </div>
+
+  <div class="glass-panel p-2">
+    <p-table
+      [value]="filteredJobs()"
+      [tableStyle]="{ width: '100%' }"
+      [paginator]="true"
+      [rows]="12"
+      [rowsPerPageOptions]="[12, 25, 50]"
+      [stripedRows]="true"
+      dataKey="id"
+      styleClass="p-datatable-sm">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th>{{ 'JOBS.COL_ID' | translate }}</th>
+          <th>{{ 'JOBS.COL_STATUS' | translate }}</th>
+          <th>{{ 'JOBS.COL_PROGRESS' | translate }}</th>
+          <th>{{ 'JOBS.COL_MODEL' | translate }}</th>
+          <th>{{ 'JOBS.COL_PROMPT' | translate }}</th>
+          <th>{{ 'JOBS.COL_CREATED' | translate }}</th>
+          <th class="text-right">{{ 'JOBS.COL_ACTIONS' | translate }}</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-job>
+        <tr>
+          <td class="max-w-[150px]"><span class="font-mono-bm block cursor-pointer truncate text-[12px] text-primary" style="overflow: hidden" (click)="openDetail(job)">{{ job.id }}</span></td>
+          <td><p-tag [value]="statusKey(job.status) | translate" [severity]="severity(job.status)" [rounded]="true" /></td>
+          <td style="min-width: 140px">
+            <p-progressbar [value]="job.progress" [showValue]="false" styleClass="h-1.5" />
+            <span class="text-[11px] text-muted">{{ job.progress | number: '1.0-0' }}%</span>
+          </td>
+          <td class="max-w-[140px]"><span class="block truncate text-[12px]" style="overflow: hidden">{{ job.model }}</span></td>
+          <td class="max-w-[260px]">
+            <span class="block truncate text-[12px] text-muted" style="overflow: hidden" [pTooltip]="job.prompt" tooltipPosition="top">{{ job.prompt }}</span>
+          </td>
+          <td class="whitespace-nowrap"><span class="text-[12px] text-muted">{{ job.created_at | date: 'HH:mm:ss' }}</span></td>
+          <td class="text-right">
+            @if (job.status === 'PROCESSING' || job.status === 'QUEUED') {
+              <p-button
+                icon="pi pi-stop-circle"
+                severity="danger"
+                [text]="true"
+                [rounded]="true"
+                size="small"
+                (onClick)="cancel(job)"
+                pTooltip="{{ 'JOBS.CANCEL' | translate }}"
+                tooltipPosition="left" />
+            } @else if (job.artifact_url || job.output_path) {
+              <a
+                [href]="job.artifact_url || '/outputs/' + job.output_path"
+                target="_blank"
+                rel="noopener"
+                class="text-decoration-none">
+                <p-button icon="pi pi-download" [text]="true" [rounded]="true" size="small"
+                  pTooltip="{{ 'JOBS.DOWNLOAD' | translate }}" tooltipPosition="left" />
+              </a>
+            }
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-subtle py-10 text-center">
+            {{ 'JOBS.EMPTY' | translate }}
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</section>
+
+<!-- Dialog de detalle -->
+<p-dialog
+  [header]="('JOBS.DETAIL_TITLE' | translate)"
+  [visible]="selectedJob() !== null"
+  [modal]="true"
+  [style]="{ width: '560px' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="selectedJob.set(null)">
+
+  @if (selectedJob(); as job) {
+    <div class="flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <strong class="font-mono-bm text-[13px] text-primary">{{ job.id }}</strong>
+        <p-tag [value]="statusKey(job.status) | translate" [severity]="severity(job.status)" [rounded]="true" />
+      </div>
+
+      <p-progressbar [value]="job.progress" [showValue]="true" styleClass="h-2" />
+
+      <div class="grid grid-cols-2 gap-2 text-[13px]">
+        <div><span class="text-muted">{{ 'JOBS.COL_MODEL' | translate }}:</span> {{ job.model }}</div>
+        <div><span class="text-muted">{{ 'JOBS.COL_MODE' | translate }}:</span> {{ job.mode }}</div>
+        <div><span class="text-muted">{{ 'JOBS.COL_CREATED' | translate }}:</span> {{ job.created_at | date: 'HH:mm:ss' }}</div>
+        @if (job.completed_at) {
+          <div><span class="text-muted">{{ 'JOBS.COL_COMPLETED' | translate }}:</span> {{ job.completed_at | date: 'HH:mm:ss' }}</div>
+        }
+      </div>
+
+      <div class="border-surface-200 dark:border-surface-700 bg-surface-100 dark:bg-surface-800 rounded-md border p-3 text-[13px]">
+        {{ job.prompt }}
+      </div>
+
+      @if (job.artifact_url || job.output_path) {
+        <a [href]="job.artifact_url || '/outputs/' + job.output_path" target="_blank" rel="noopener" class="text-primary text-[13px] underline">
+          {{ 'MONITOR.GENERATED' | translate: { path: job.output_path } }}
+        </a>
+      }
+    </div>
+  }
+</p-dialog>

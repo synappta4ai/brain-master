@@ -1,0 +1,45 @@
+# Angular Frontend .gitignore
+
+# Dependencias compiladas
+/node_modules
+/.pnp
+.pnp.js
+
+# Salidas de compilación
+/dist
+/tmp
+/out-tsc
+/bazel-out
+
+# Caché interno de Angular y Vite
+/.angular/cache
+.cache/
+
+# Logs de depuración de npm y yarn
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Logs del servidor de desarrollo local
+ng-serve.log*
+
+# Configuraciones de editores / IDEs
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Cobertura de pruebas
+/coverage
+
+# Archivos de entorno local
+.env
+.env.local

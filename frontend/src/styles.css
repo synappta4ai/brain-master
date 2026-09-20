@@ -1,0 +1,180 @@
+/* ============================================================
+   Brain-Master Design System — Tailwind v4 + PrimeNG 21
+   Paleta cinematográfica "Golden Hour / Studio" en dos esquemas.
+   ============================================================ */
+
+@import "tailwindcss";
+@import "tailwindcss-primeui"; /* condición "style" del paquete → v4/index.css */
+@import "primeicons/primeicons.css";
+
+/* Variantes personalizadas: dark sincronizado con PrimeNG (.app-dark) y glass */
+@custom-variant dark (&:where(.app-dark, .app-dark *));
+@custom-variant glass (&:where(.glass, .glass *));
+
+/* ---- Capas CSS: primeng entre base y utilities para permitir overrides con Tailwind ---- */
+@layer theme, base, primeng, components, utilities;
+
+/* ---- Paleta de marca (idéntica en ambos esquemas) ---- */
+@theme {
+  --color-brand-50:  #fffbeb;
+  --color-brand-100: #fef3c7;
+  --color-brand-200: #fde68a;
+  --color-brand-300: #fcd34d;
+  --color-brand-400: #fbbf24;
+  --color-brand-500: #f59e0b;
+  --color-brand-600: #d97706;
+  --color-brand-700: #b45309;
+  --color-brand-800: #92400e;
+  --color-brand-900: #78350f;
+
+  --color-accent-400: #34d399;
+  --color-accent-500: #10b981;
+  --color-accent-600: #059669;
+
+  --color-cine-400: #60a5fa;
+  --color-cine-500: #3b82f6;
+  --color-cine-600: #2563eb;
+
+  --color-alert-400: #f87171;
+  --color-alert-500: #ef4444;
+  --color-alert-600: #dc2626;
+
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+/* ---- Tokens semánticos: esquema OSCURO (por defecto) ---- */
+:root,
+.app-dark {
+  --bm-bg-main: #0c0e14;
+  --bm-bg-surface: #141721;
+  --bm-bg-card: #1a1e2b;
+  --bm-bg-elevated: #242a3c;
+  --bm-bg-input: #11131c;
+  --bm-border-subtle: #2d3448;
+
+  --bm-text-main: #f9fafb;
+  --bm-text-muted: #9ca3af;
+  --bm-text-subtle: #6b7280;
+
+  --bm-primary-glow: rgba(245, 158, 11, 0.25);
+  --bm-panel-alpha: rgba(20, 23, 33, 0.85);
+  --bm-shadow-card: 0 4px 20px rgba(0, 0, 0, 0.4);
+  color-scheme: dark;
+}
+
+/* ---- Tokens semánticos: esquema CLARO ---- */
+.app-light {
+  --bm-bg-main: #f6f7fb;
+  --bm-bg-surface: #ffffff;
+  --bm-bg-card: #ffffff;
+  --bm-bg-elevated: #eef1f7;
+  --bm-bg-input: #ffffff;
+  --bm-border-subtle: #dde3ee;
+
+  --bm-text-main: #111827;
+  --bm-text-muted: #5b6472;
+  --bm-text-subtle: #8b93a3;
+
+  --bm-primary-glow: rgba(217, 119, 6, 0.18);
+  --bm-panel-alpha: rgba(255, 255, 255, 0.9);
+  --bm-shadow-card: 0 4px 20px rgba(15, 23, 42, 0.08);
+  color-scheme: light;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+  }
+
+  body {
+    background-color: var(--bm-bg-main);
+    color: var(--bm-text-main);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+    overflow-x: hidden;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--bm-bg-main);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--bm-border-subtle);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--bm-text-subtle);
+  }
+}
+
+@layer components {
+  /* Panel de cristal (glassmorphism) adaptado por esquema */
+  .glass-panel {
+    background: var(--bm-panel-alpha);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--bm-border-subtle);
+    border-radius: 10px;
+  }
+
+  .glass-card {
+    background: var(--bm-bg-card);
+    border: 1px solid var(--bm-border-subtle);
+    border-radius: 6px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-card:hover {
+    border-color: rgba(245, 158, 11, 0.4);
+    box-shadow: var(--bm-shadow-card);
+  }
+
+  .text-muted {
+    color: var(--bm-text-muted);
+  }
+
+  .text-subtle {
+    color: var(--bm-text-subtle);
+  }
+
+  .border-subtle {
+    border-color: var(--bm-border-subtle);
+  }
+
+  .bg-input-bm {
+    background: var(--bm-bg-input);
+  }
+
+  .bg-elevated-bm {
+    background: var(--bm-bg-elevated);
+  }
+
+  .bg-surface-bm {
+    background: var(--bm-bg-surface);
+  }
+
+  .bg-card-bm {
+    background: var(--bm-bg-card);
+  }
+
+  .bg-main-bm {
+    background: var(--bm-bg-main);
+  }
+
+  .font-mono-bm {
+    font-family: var(--font-mono);
+  }
+
+  .ellipsis-clip {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}

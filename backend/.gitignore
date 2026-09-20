@@ -1,0 +1,27 @@
+# Go Backend .gitignore
+
+# Binarios y ejecutables compilados
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+brain-master-server
+brain-master-server.exe
+
+# Salidas de pruebas y cobertura
+*.out
+*.test
+coverage.txt
+
+# Directorio de medios generados (ignora los videos pero conserva el directorio)
+outputs/*
+!outputs/.gitkeep
+
+# Variables de entorno locales
+.env
+.env.local
+*.local.json
+
+# Logs y volcados de depuración
+*.log

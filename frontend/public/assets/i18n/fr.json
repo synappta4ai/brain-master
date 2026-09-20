@@ -1,0 +1,118 @@
+{
+  "NAV": {
+    "STUDIO": "Studio",
+    "DIRECTOR": "Mode Réalisateur",
+    "EDITOR": "Éditeur de Timeline",
+    "LORAS": "LoRAs et CivitAI",
+    "JOBS": "Tâches"
+  },
+  "HEADER": {
+    "CONNECTED": "Passerelle Go Connectée",
+    "OFFLINE": "Passerelle Go Hors Ligne"
+  },
+  "SETTINGS": {
+    "TITLE": "Apparence",
+    "THEME": "Thème",
+    "DARK": "Sombre",
+    "LIGHT": "Clair",
+    "PALETTE": "Palette de couleurs",
+    "LANGUAGE": "Langue",
+    "PALETTES": {
+      "AMBER": "Ambre",
+      "EMERALD": "Émeraude",
+      "BLUE": "Bleu",
+      "VIOLET": "Violet",
+      "ROSE": "Rose",
+      "TEAL": "Sarcelle"
+    }
+  },
+  "STUDIO": {
+    "TITLE": "Studio Mode",
+    "ENHANCE": "Améliorer",
+    "ENHANCE_TIP": "Améliorer le prompt avec le LLM du worker (gRPC)",
+    "VIDEO": "Vidéo",
+    "IMAGE": "Image",
+    "MODEL": "Modèle Génératif",
+    "PROMPT": "Prompt Positif",
+    "PROMPT_PLACEHOLDER": "Décrivez ce que vous souhaitez générer...",
+    "NEGATIVE": "Prompt Négatif",
+    "NEGATIVE_PLACEHOLDER": "Éléments indésirables...",
+    "DURATION": "Durée (s)",
+    "FPS": "FPS",
+    "GENERATE": "Générer sur GPU"
+  },
+  "GPU": {
+    "TITLE": "Télémétrie GPU (Worker Python)",
+    "FREE_VRAM": "VRAM Libre",
+    "TOTAL_VRAM": "VRAM Totale",
+    "UTILIZATION": "Utilisation",
+    "UNAVAILABLE": "Worker Python non connecté — démarrez server.py pour voir la télémétrie."
+  },
+  "JOBS": {
+    "TITLE": "Historique des Tâches",
+    "ACTIVE": "actives",
+    "REFRESH": "Actualiser",
+    "FILTER_ALL": "Tous les états",
+    "STATUS_QUEUED": "En file",
+    "STATUS_PROCESSING": "En cours",
+    "STATUS_COMPLETED": "Terminé",
+    "STATUS_FAILED": "Échoué",
+    "STATUS_CANCELLED": "Annulé",
+    "COL_ID": "ID",
+    "COL_STATUS": "État",
+    "COL_PROGRESS": "Progression",
+    "COL_MODEL": "Modèle",
+    "COL_PROMPT": "Prompt",
+    "COL_CREATED": "Créé",
+    "COL_COMPLETED": "Terminé",
+    "COL_MODE": "Mode",
+    "COL_ACTIONS": "Actions",
+    "CANCEL": "Annuler la tâche",
+    "DOWNLOAD": "Télécharger la sortie",
+    "EMPTY": "Aucune tâche. Générez quelque chose depuis le Studio.",
+    "DETAIL_TITLE": "Détail de la Tâche"
+  },
+  "MONITOR": {
+    "TITLE": "Moniteur d'Inférence en Direct",
+    "EMPTY": "Aucune tâche en cours. Cliquez sur \"Générer sur GPU\" pour démarrer.",
+    "PROGRESS": "Progression",
+    "MODEL": "Modèle",
+    "GENERATED": "✅ Génération terminée : {{path}}"
+  },
+  "DIRECTOR": {
+    "TITLE": "Mode Réalisateur (Shot & Beat Planner)",
+    "SUBTITLE": "Planification cinématographique assistée par LLM pour clips musicaux et courts-métrages avec continuité.",
+    "ANALYZE": "Analyser BPM et Audio",
+    "WRITE": "Écrire le Scénario avec LLM",
+    "BPM": "BPM Détecté",
+    "STRUCTURE": "Structure",
+    "STRUCTURE_VALUE": "Intro → Couplet 1 → Refrain",
+    "CUTS": "Coupes Synchronisées au Beat",
+    "SHOTS": "Plan de Prises du Réalisateur (Multi-Clip)",
+    "SHOT_NUMBER": "Prise #{{id}}",
+    "SHOT_DURATION": "durée {{n}}s",
+    "GENERATE_SHOT": "Générer la Prise"
+  },
+  "EDITOR": {
+    "TITLE": "Éditeur de Timeline Multipiste",
+    "PLAY": "Lire",
+    "PAUSE": "Pause",
+    "SPLIT": "Diviser le Clip",
+    "EXPORT": "Exporter (H.264/AV1)",
+    "PREVIEW": "Aperçu du Rendu (1080p 60fps)",
+    "MEDIA_POOL": "Médiathèque du Projet"
+  },
+  "LORAS": {
+    "SEARCH_PLACEHOLDER": "Rechercher des LoRAs sur CivitAI et HuggingFace (styles, personnages, éclairage)...",
+    "ALL_CATEGORIES": "Toutes les Catégories",
+    "STYLE": "Style Visuel",
+    "CHARACTER": "Personnages",
+    "LIGHTING": "Éclairage Cinématographique",
+    "REFRESH": "Actualiser le Catalogue",
+    "DOWNLOADS": "Téléchargements",
+    "SUGGESTED_WEIGHT": "Poids suggéré",
+    "TRIGGER_WORDS": "Mots-déclencheurs",
+    "INSTALL": "Installer le LoRA",
+    "ACTIVE": "Actif"
+  }
+}

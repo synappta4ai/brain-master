@@ -1,0 +1,118 @@
+{
+  "NAV": {
+    "STUDIO": "Studio",
+    "DIRECTOR": "Director Mode",
+    "EDITOR": "Timeline Editor",
+    "LORAS": "LoRAs & CivitAI",
+    "JOBS": "Jobs"
+  },
+  "HEADER": {
+    "CONNECTED": "Go Gateway Connected",
+    "OFFLINE": "Go Gateway Offline"
+  },
+  "SETTINGS": {
+    "TITLE": "Appearance",
+    "THEME": "Theme",
+    "DARK": "Dark",
+    "LIGHT": "Light",
+    "PALETTE": "Color palette",
+    "LANGUAGE": "Language",
+    "PALETTES": {
+      "AMBER": "Amber",
+      "EMERALD": "Emerald",
+      "BLUE": "Blue",
+      "VIOLET": "Violet",
+      "ROSE": "Rose",
+      "TEAL": "Teal"
+    }
+  },
+  "STUDIO": {
+    "TITLE": "Studio Mode",
+    "ENHANCE": "Enhance",
+    "ENHANCE_TIP": "Enhance prompt with the worker LLM (gRPC)",
+    "VIDEO": "Video",
+    "IMAGE": "Image",
+    "MODEL": "Generative Model",
+    "PROMPT": "Positive Prompt",
+    "PROMPT_PLACEHOLDER": "Describe what you want to generate...",
+    "NEGATIVE": "Negative Prompt",
+    "NEGATIVE_PLACEHOLDER": "Undesired elements...",
+    "DURATION": "Duration (s)",
+    "FPS": "FPS",
+    "GENERATE": "Generate on GPU"
+  },
+  "GPU": {
+    "TITLE": "GPU Telemetry (Python Worker)",
+    "FREE_VRAM": "Free VRAM",
+    "TOTAL_VRAM": "Total VRAM",
+    "UTILIZATION": "Utilization",
+    "UNAVAILABLE": "Python worker not connected — start server.py to see telemetry."
+  },
+  "JOBS": {
+    "TITLE": "Job History",
+    "ACTIVE": "active",
+    "REFRESH": "Refresh",
+    "FILTER_ALL": "All statuses",
+    "STATUS_QUEUED": "Queued",
+    "STATUS_PROCESSING": "Processing",
+    "STATUS_COMPLETED": "Completed",
+    "STATUS_FAILED": "Failed",
+    "STATUS_CANCELLED": "Cancelled",
+    "COL_ID": "ID",
+    "COL_STATUS": "Status",
+    "COL_PROGRESS": "Progress",
+    "COL_MODEL": "Model",
+    "COL_PROMPT": "Prompt",
+    "COL_CREATED": "Created",
+    "COL_COMPLETED": "Completed",
+    "COL_MODE": "Mode",
+    "COL_ACTIONS": "Actions",
+    "CANCEL": "Cancel job",
+    "DOWNLOAD": "Download output",
+    "EMPTY": "No jobs yet. Generate something from the Studio.",
+    "DETAIL_TITLE": "Job Detail"
+  },
+  "MONITOR": {
+    "TITLE": "Live Inference Monitor",
+    "EMPTY": "No jobs running. Click \"Generate on GPU\" to start.",
+    "PROGRESS": "Progress",
+    "MODEL": "Model",
+    "GENERATED": "✅ Generation completed: {{path}}"
+  },
+  "DIRECTOR": {
+    "TITLE": "Director Mode (Shot & Beat Planner)",
+    "SUBTITLE": "LLM-assisted cinematic planning for music videos and short films with continuity.",
+    "ANALYZE": "Analyze BPM & Audio",
+    "WRITE": "Write Screenplay with LLM",
+    "BPM": "Detected BPM",
+    "STRUCTURE": "Structure",
+    "STRUCTURE_VALUE": "Intro → Verse 1 → Chorus",
+    "CUTS": "Beat-Synced Cuts",
+    "SHOTS": "Director's Shot Plan (Multi-Clip)",
+    "SHOT_NUMBER": "Shot #{{id}}",
+    "SHOT_DURATION": "{{n}}s duration",
+    "GENERATE_SHOT": "Generate Shot"
+  },
+  "EDITOR": {
+    "TITLE": "Multi-Track Timeline Editor",
+    "PLAY": "Play",
+    "PAUSE": "Pause",
+    "SPLIT": "Split Clip",
+    "EXPORT": "Export (H.264/AV1)",
+    "PREVIEW": "Render Preview (1080p 60fps)",
+    "MEDIA_POOL": "Project Media Pool"
+  },
+  "LORAS": {
+    "SEARCH_PLACEHOLDER": "Search LoRAs on CivitAI and HuggingFace (styles, characters, lighting)...",
+    "ALL_CATEGORIES": "All Categories",
+    "STYLE": "Visual Style",
+    "CHARACTER": "Characters",
+    "LIGHTING": "Cinematic Lighting",
+    "REFRESH": "Refresh Catalog",
+    "DOWNLOADS": "Downloads",
+    "SUGGESTED_WEIGHT": "Suggested weight",
+    "TRIGGER_WORDS": "Trigger Words",
+    "INSTALL": "Install LoRA",
+    "ACTIVE": "Active"
+  }
+}

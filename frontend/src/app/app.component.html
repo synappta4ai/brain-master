@@ -1,0 +1,116 @@
+<div class="bg-main-bm flex min-h-screen flex-col gap-5 p-5 md:px-8">
+
+  <!-- ============ Header ============ -->
+  <header class="border-subtle flex flex-wrap items-center justify-between gap-4 border-b pb-4">
+    <div class="flex flex-wrap items-center gap-4 lg:gap-8">
+      <div>
+        <h1 class="m-0 flex items-center gap-2 text-[22px] font-extrabold text-primary dark:text-primary-400">
+          🧠 Brain-Master
+          <span class="bg-elevated-bm rounded px-2 py-0.5 font-mono-bm text-[11px] font-normal text-muted">v2.1 Hybrid</span>
+        </h1>
+        <p class="m-0 mt-0.5 text-xs text-muted">Angular 21 · Go Gateway · Python gRPC Engine</p>
+      </div>
+
+      <!-- Navegación por rutas (RouterLink + RouterLinkActive) -->
+      <nav class="bg-surface-bm border-subtle flex gap-1 rounded-lg border p-1">
+        @for (item of navItems; track item.route) {
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="active-nav"
+            #rla="routerLinkActive"
+            class="text-decoration-none">
+            <p-button
+              [label]="item.key | translate"
+              [icon]="item.icon"
+              [text]="!rla.isActive"
+              [rounded]="true"
+              [severity]="rla.isActive ? 'primary' : 'secondary'"
+              size="small" />
+          </a>
+        }
+      </nav>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <!-- Apariencia: tema + paleta + idioma (popover unificado) -->
+      <p-button
+        icon="pi pi-palette"
+        [text]="true"
+        [rounded]="true"
+        severity="secondary"
+        (onClick)="settingsPopover.toggle($event)"
+        pTooltip="{{ 'SETTINGS.TITLE' | translate }}"
+        tooltipPosition="bottom" />
+
+      @if (ws.isConnected()) {
+        <p-tag [value]="('HEADER.CONNECTED' | translate)" severity="success" [rounded]="true" icon="pi pi-circle-fill" />
+      } @else {
+        <p-tag [value]="('HEADER.OFFLINE' | translate)" severity="danger" [rounded]="true" icon="pi pi-circle-fill" />
+      }
+    </div>
+  </header>
+
+  <!-- ============ Contenido por ruta ============ -->
+  <main class="flex-1">
+    <router-outlet />
+  </main>
+</div>
+
+<!-- ============ Popover: Apariencia (tema + paleta + idioma) ============ -->
+<p-popover #settingsPopover>
+  <ng-template pTemplate="content">
+    <div class="flex w-60 flex-col gap-4 p-1">
+      <span class="text-sm font-bold">{{ 'SETTINGS.TITLE' | translate }}</span>
+
+      <!-- Modo de color -->
+      <div class="flex flex-col gap-1.5">
+        <span class="text-xs font-semibold text-muted">{{ 'SETTINGS.THEME' | translate }}</span>
+        <p-selectbutton
+          [ngModel]="themeService.theme()"
+          (ngModelChange)="themeService.setMode($event)"
+          [options]="themeModeOptions"
+          optionLabel="label"
+          optionValue="value"
+          [allowEmpty]="false">
+          <ng-template pTemplate="item" let-option>
+            <i [class]="option.icon" class="mr-1.5"></i>{{ option.label | translate }}
+          </ng-template>
+        </p-selectbutton>
+      </div>
+
+      <!-- Paleta primaria -->
+      <div class="flex flex-col gap-1.5">
+        <span class="text-xs font-semibold text-muted">{{ 'SETTINGS.PALETTE' | translate }}</span>
+        <div class="grid grid-cols-6 gap-2">
+          @for (p of themeService.palettes; track p.id) {
+            <button
+              type="button"
+              (click)="themeService.setPalette(p.id)"
+              class="h-7 w-7 cursor-pointer rounded-full border-2 transition-transform hover:scale-110"
+              [style.background]="p.swatch"
+              [style.border-color]="themeService.palette() === p.id ? 'var(--p-text-color)' : 'transparent'"
+              [attr.aria-label]="p.id"
+              [pTooltip]="('SETTINGS.PALETTES.' + p.id.toUpperCase()) | translate"
+              tooltipPosition="top"></button>
+          }
+        </div>
+      </div>
+
+      <!-- Idioma -->
+      <div class="flex flex-col gap-1.5">
+        <span class="text-xs font-semibold text-muted">{{ 'SETTINGS.LANGUAGE' | translate }}</span>
+        <p-selectbutton
+          [ngModel]="languageService.current()"
+          (ngModelChange)="languageService.use($event)"
+          [options]="languageService.languages"
+          optionLabel="code"
+          optionValue="code"
+          [allowEmpty]="false">
+          <ng-template pTemplate="item" let-option>
+            {{ option.code.toUpperCase() }}
+          </ng-template>
+        </p-selectbutton>
+      </div>
+    </div>
+  </ng-template>
+</p-popover>

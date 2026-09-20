@@ -1,0 +1,192 @@
+<div class="grid gap-6 xl:grid-cols-2">
+  <!-- Controles de generación -->
+  <section class="glass-panel flex flex-col gap-4 p-6">
+    <div class="flex items-center justify-between">
+      <h2 class="m-0 text-lg font-bold">🎨 {{ 'STUDIO.TITLE' | translate }}</h2>
+      <p-selectButton
+        [ngModel]="mode()"
+        (ngModelChange)="onModeChange($event)"
+        [options]="modeOptions"
+        optionLabel="label"
+        optionValue="value"
+        [allowEmpty]="false">
+        <ng-template pTemplate="item" let-option>
+          {{ option.label | translate }}
+        </ng-template>
+      </p-selectButton>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-semibold text-muted" for="model">{{ 'STUDIO.MODEL' | translate }}</label>
+      <p-select
+        inputId="model"
+        [ngModel]="selectedModel()"
+        (ngModelChange)="selectedModel.set($event)"
+        [options]="filteredModels()"
+        optionLabel="label"
+        optionValue="value"
+        class="w-full">
+        <ng-template pTemplate="option" let-option>
+          <span class="flex items-center gap-2">
+            {{ option.label }}
+            @if (option.badge) {
+              <p-tag [value]="option.badge" severity="success" class="text-[10px]" />
+            }
+          </span>
+        </ng-template>
+        <ng-template pTemplate="value" let-selected>
+          @if (selectedModelSpec(); as spec) {
+            <span class="flex items-center gap-2">
+              {{ spec.label }}
+              @if (spec.badge) {
+                <p-tag [value]="spec.badge" severity="success" class="text-[10px]" />
+              }
+            </span>
+          }
+        </ng-template>
+      </p-select>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <div class="flex items-center justify-between">
+        <label class="text-xs font-semibold text-muted" for="prompt">{{ 'STUDIO.PROMPT' | translate }}</label>
+        <p-button
+          [label]="'STUDIO.ENHANCE' | translate"
+          icon="pi pi-star"
+          [text]="true"
+          [rounded]="true"
+          size="small"
+          (onClick)="onEnhancePrompt()"
+          pTooltip="{{ 'STUDIO.ENHANCE_TIP' | translate }}"
+          tooltipPosition="left" />
+      </div>
+      <textarea
+        pTextarea
+        id="prompt"
+        rows="3"
+        class="w-full bg-input-bm"
+        [ngModel]="prompt()"
+        (ngModelChange)="prompt.set($event)"
+        [attr.placeholder]="'STUDIO.PROMPT_PLACEHOLDER' | translate"></textarea>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-semibold text-muted" for="negPrompt">{{ 'STUDIO.NEGATIVE' | translate }}</label>
+      <textarea
+        pTextarea
+        id="negPrompt"
+        rows="2"
+        class="w-full bg-input-bm"
+        [ngModel]="negativePrompt()"
+        (ngModelChange)="negativePrompt.set($event)"
+        [attr.placeholder]="'STUDIO.NEGATIVE_PLACEHOLDER' | translate"></textarea>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-semibold text-muted" for="duration">{{ 'STUDIO.DURATION' | translate }}</label>
+        <p-inputnumber
+          inputId="duration"
+          [ngModel]="duration()"
+          (ngModelChange)="duration.set($event)"
+          [min]="1"
+          [max]="36"
+          inputStyleClass="w-full bg-input-bm" />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-semibold text-muted" for="fps">{{ 'STUDIO.FPS' | translate }}</label>
+        <p-inputnumber
+          inputId="fps"
+          [ngModel]="fps()"
+          (ngModelChange)="fps.set($event)"
+          [min]="1"
+          [max]="60"
+          inputStyleClass="w-full bg-input-bm" />
+      </div>
+    </div>
+
+    <p-button
+      [label]="mode() === 'video'
+        ? ('STUDIO.GENERATE' | translate) + ' (' + frames() + ' frames)'
+        : ('STUDIO.GENERATE' | translate) + ' (' + (selectedModelSpec()?.steps ?? 20) + ' steps)'"
+      icon="pi pi-bolt"
+      size="large"
+      class="mt-2"
+      styleClass="w-full justify-center"
+      [loading]="isSubmitting()"
+      [disabled]="isSubmitting()"
+      (onClick)="onGenerate()" />
+  </section>
+
+  <!-- Columna derecha: telemetría + monitor -->
+  <div class="flex flex-col gap-6">
+    <!-- Telemetría GPU del worker Python -->
+    <section class="glass-panel flex flex-col gap-3 p-6">
+      <div class="flex items-center justify-between">
+        <h3 class="m-0 text-base font-bold">🖥️ {{ 'GPU.TITLE' | translate }}</h3>
+        <p-button
+          icon="pi pi-refresh"
+          [text]="true"
+          [rounded]="true"
+          size="small"
+          (onClick)="refreshGpu()" />
+      </div>
+
+      @if (gpu(); as tel) {
+        <div class="grid grid-cols-3 gap-3 text-center">
+          <div class="glass-card flex flex-col gap-1 p-3">
+            <span class="text-[11px] text-muted">{{ 'GPU.FREE_VRAM' | translate }}</span>
+            <strong class="text-primary text-lg">{{ tel.free_vram_mb | number }}</strong>
+            <span class="text-[10px] text-muted">MB</span>
+          </div>
+          <div class="glass-card flex flex-col gap-1 p-3">
+            <span class="text-[11px] text-muted">{{ 'GPU.TOTAL_VRAM' | translate }}</span>
+            <strong class="text-primary text-lg">{{ tel.total_vram_mb | number }}</strong>
+            <span class="text-[10px] text-muted">MB</span>
+          </div>
+          <div class="glass-card flex flex-col gap-1 p-3">
+            <span class="text-[11px] text-muted">{{ 'GPU.UTILIZATION' | translate }}</span>
+            <strong class="text-primary text-lg">{{ tel.gpu_utilization | number: '1.0-0' }}</strong>
+            <span class="text-[10px] text-muted">%</span>
+          </div>
+        </div>
+        <div class="text-xs text-muted">{{ tel.device_name }}</div>
+      } @else {
+        <div class="text-subtle py-3 text-center text-sm">{{ 'GPU.UNAVAILABLE' | translate }}</div>
+      }
+    </section>
+
+    <!-- Monitor en vivo -->
+    <section class="glass-panel flex flex-1 flex-col gap-4 p-6">
+      <h3 class="m-0 text-base font-bold">📡 {{ 'MONITOR.TITLE' | translate }}</h3>
+
+      @if (ws.lastJob(); as job) {
+        <div class="glass-card border-l-4! border-l-primary! flex flex-col gap-3 p-4">
+          <div class="flex items-center justify-between">
+            <strong class="font-mono-bm text-[13px] text-primary">{{ job.id }}</strong>
+            <p-tag
+              [value]="job.status"
+              [severity]="job.status === 'COMPLETED' ? 'success' : job.status === 'FAILED' ? 'danger' : job.status === 'CANCELLED' ? 'secondary' : 'warn'" />
+          </div>
+
+          <p-progressbar [value]="job.progress" [showValue]="false" styleClass="h-2.5" />
+
+          <div class="flex justify-between text-xs text-muted">
+            <span>{{ 'MONITOR.PROGRESS' | translate }}: <strong class="text-primary">{{ job.progress | number: '1.0-0' }}%</strong></span>
+            <span>{{ 'MONITOR.MODEL' | translate }}: <strong class="text-primary">{{ job.model }}</strong></span>
+          </div>
+
+          @if (job.output_path) {
+            <div class="border-surface-200 dark:border-surface-700 bg-surface-100 dark:bg-surface-800 rounded-md border px-3 py-2.5 text-[13px] text-surface-700 dark:text-surface-200">
+              {{ 'MONITOR.GENERATED' | translate: { path: job.output_path } }}
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="text-subtle flex flex-1 items-center justify-center py-12 text-center text-sm">
+          {{ 'MONITOR.EMPTY' | translate }}
+        </div>
+      }
+    </section>
+  </div>
+</div>
