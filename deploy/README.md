@@ -113,6 +113,20 @@ entrantes que detectar).
 
 ## 3 · Runpod (producción barata)
 
+**Flujo express sin registry (2 min):** crea un Pod con plantilla PyTorch
+(CTO 12.4), expón los puertos TCP `50051` y `50052` (Ports → TCP), abre
+**Start Web Terminal** y pega:
+
+```bash
+curl -sL https://raw.githubusercontent.com/synappta4ai/brain-master/main/deploy/rented/setup_worker.sh | bash
+```
+
+Imprime el comando exacto para conectar tu gateway (IP directa, sin
+túneles). **Sin** Network Volume los pesos se re-descargan por pod; si vas
+en serio, monta uno en `/models-cache` (o pásale `HF_HOME`).
+
+Alternativa con imagen propia:
+
 1. `./deploy/build-push.sh` publica las imágenes a tu registry (Docker Hub).
 2. En Runpod: **Pods → Deploy** → imagen `REGISTRY/brainmaster-worker:latest`.
 3. Monta un **Network Volume** en `/models-cache` (pesos persistentes entre
@@ -126,10 +140,12 @@ o **auto-stop** (el gateway tiene reintentos y el pod arranca en ~40 s).
 
 ## 4 · Vast.ai
 
-Igual que Runpod pero: crea instancia con plantilla docker
-`REGISTRY/brainmaster-worker:latest`, on-start script =
-`docker compose up -d` del repo clonado, y usa el *proxy* de Vast para los
-puertos. Suele ser un 30-40 % más barato que Runpod para 3090/4090.
+Igual que Runpod pero: al crear la instancia elige un template de PyTorch
+(CUDA 12.x), abre los puertos `50051` (gRPC) y `50052` (HTTP) en el
+instancia → edita ports, y corre el mismo `deploy/rented/setup_worker.sh`
+(SSH o consola web). Suele ser un 30-40 % más barato que Runpod para
+3090/4090. Alternativa on-start script = `docker compose up -d` del repo
+clonado.
 
 ## 5 · EC2 / Lambda Labs / GCP (VM con user-data)
 
