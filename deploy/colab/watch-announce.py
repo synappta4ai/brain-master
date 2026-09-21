@@ -98,7 +98,8 @@ def reconnect(host, base):
     # quedar bloqueado minutos y perder announces nuevos). El detalle queda
     # en backend/gateway-reconnect.log.
     logf = open(REPO / "backend" / "gateway-reconnect.log", "a")
-    flags = 0x00000008 | 0x00000200  # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
+    flags = 0x08000000  # CREATE_NO_WINDOW: sin consola pero proceso FUNCIONAL
+    # (DETACHED_PROCESS mataba powershell silenciosamente antes de actuar)
     subprocess.Popen(cmd, stdout=logf, stderr=subprocess.STDOUT, creationflags=flags)
     log("ps1 lanzado detached (-Quick); detalle en backend/gateway-reconnect.log")
     return True
