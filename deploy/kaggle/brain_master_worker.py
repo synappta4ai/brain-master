@@ -134,8 +134,15 @@ try:
         time.sleep(30)
         if worker.poll() is not None or bore.poll() is not None or cf.poll() is not None:
             print("algo murió; relanzando worker + túneles...")
-            worker, bore, cf, host, art_url = start_all()
-            print("re-anunciado:", host)
+            try:
+                worker, bore, cf, host, art_url = start_all()
+                print("re-anunciado:", host)
+            except Exception:
+                # wait_for puede agotar 40s si bore.pub/cloudflared titubea:
+                # NO matar el watchdog, reintentar en el próximo ciclo.
+                import traceback
+                traceback.print_exc()
+                print("relanzamiento falló; reintento en el próximo ciclo")
 except KeyboardInterrupt:
     print("deteniendo...")
     for p in (worker, bore, cf):
