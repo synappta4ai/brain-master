@@ -103,6 +103,14 @@ publicado como `http://bore.pub:<puerto>`) porque la red de Kaggle corta
 QUIC/UDP y cloudflared muere al instante (Error 1033). El announce ntfy es
 idéntico: el watcher reconecta igual que con Colab.
 
+⚠️ **Límite observado (sep 2026)**: Kaggle mata sesiones que exponen túneles
+públicos a internet en ~2-3 minutos (política anti-servidores), incluso con
+túneles bore sin cloudflared — el announce llega, el gateway llega a
+conectar, y el kernel muere poco después. Consistentemente en 4 sesiones.
+Para GPU gratis estable usa **Colab (opción 1)** o implementa un
+**pull-queue** (el worker sale hacia el gateway a buscar jobs: sin túneles
+entrantes que detectar).
+
 ## 3 · Runpod (producción barata)
 
 1. `./deploy/build-push.sh` publica las imágenes a tu registry (Docker Hub).
