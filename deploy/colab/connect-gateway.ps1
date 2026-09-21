@@ -18,7 +18,8 @@
 param(
   [string]$NtfyTopic,
   [string]$WorkerHost,
-  [string]$ArtifactBase
+  [string]$ArtifactBase,
+  [switch]$Quick
 )
 
 $ErrorActionPreference = "Stop"
@@ -67,6 +68,9 @@ if (-not $health.worker_connected) { throw "el gateway no pudo conectar al worke
 $models = Invoke-RestMethod "http://127.0.0.1:8080/api/v1/models" -TimeoutSec 15
 Write-Host "  catálogo: $($models.models.Count) modelos | device: $($models.device_name)" -ForegroundColor Green
 
+if ($Quick) {
+  Write-Host "(modo rápido: sin job de prueba; el e2e lo corre quien invoca)"
+} else {
 Write-Host "» Job de prueba a través del túnel..." -ForegroundColor Cyan
 $job = Invoke-RestMethod -Method Post "http://127.0.0.1:8080/api/v1/jobs/create" `
   -ContentType "application/json" -Body (@{
@@ -90,6 +94,7 @@ if ($j.artifact_url) {
   } catch { Write-Host "  artifact_url NO descargable: $_" -ForegroundColor Yellow }
 } else {
   Write-Host "  sin artifact_url (¿BM_WORKER_ARTIFACT_BASE correcto?)" -ForegroundColor Yellow
+}
 }
 
 Write-Host ""

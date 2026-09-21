@@ -98,6 +98,11 @@ Igual que Colab pero: acelerador GPU en Settings, Internet ON, y ejecuta
 `/kaggle/working` se guarda como output del notebook (los artefactos
 generados quedan descargables desde Kaggle incluso tras apagarse).
 
+Diferencia de túneles: **ambos van por bore** (gRPC y artifact server,
+publicado como `http://bore.pub:<puerto>`) porque la red de Kaggle corta
+QUIC/UDP y cloudflared muere al instante (Error 1033). El announce ntfy es
+idéntico: el watcher reconecta igual que con Colab.
+
 ## 3 · Runpod (producción barata)
 
 1. `./deploy/build-push.sh` publica las imágenes a tu registry (Docker Hub).

@@ -49,13 +49,11 @@ sh([sys.executable, "-m", "pip", "install", "-q",
     "psutil"])
 
 # ------------------------------------------------- 3. binarios de túneles
-# gRPC va por bore (TCP puro; cloudflared solo hace HTTP y rompe streams
-# gRPC). Artefactos por cloudflared (HTTP).
-if not os.path.exists("/usr/local/bin/cloudflared"):
-    sh(["curl", "-sL", "-o", "/usr/local/bin/cloudflared",
-        "https://github.com/cloudflare/cloudflared/releases/"
-        "latest/download/cloudflared-linux-amd64"])
-    sh(["chmod", "+x", "/usr/local/bin/cloudflared"])
+# AMBOS túneles van por bore (TCP puro). cloudflared muere en Kaggle: su
+# transporte usa QUIC/UDP y la red de Kaggle lo corta (Error 1033 en
+# segundos). bore, en cambio, funciona sin problemas. El artifact server
+# se publica como http://bore.pub:<puerto> (HTTP/1.1 atraviesa el túnel
+# TCP sin cambios).
 if not os.path.exists("/usr/local/bin/bore"):
     sh(["curl", "-sL", "-o", "/tmp/bore.tar.gz",
         "https://github.com/ekzhang/bore/releases/download/v0.6.0/"
@@ -108,19 +106,20 @@ def start_all():
                             stderr=subprocess.STDOUT)
     bore_port = wait_for(f"{OUT}/bore.log", r"listening at bore\.pub:(\d+)").group(1)
 
-    cf = subprocess.Popen(["cloudflared", "tunnel", "--url",
-                           "http://127.0.0.1:50052", "--no-autoupdate"],
-                          stdout=open(f"{OUT}/cf.log", "w"),
-                          stderr=subprocess.STDOUT)
-    art_url = wait_for(f"{OUT}/cf.log",
-                       r"https://[a-z0-9-]+\.trycloudflare\.com").group(0)
+    # Artefactos: SEGUNDO túnel bore (ver rationale arriba).
+    bore_art = subprocess.Popen(["bore", "local", "50052", "--to", "bore.pub"],
+                                stdout=open(f"{OUT}/bore_art.log", "w"),
+                                stderr=subprocess.STDOUT)
+    art_port = wait_for(f"{OUT}/bore_art.log",
+                        r"listening at bore\.pub:(\d+)").group(1)
+    art_url = f"http://bore.pub:{art_port}"
 
     host = "bore.pub:" + bore_port
     announce(host, art_url)
-    return worker, bore, cf, host, art_url
+    return worker, bore, bore_art, host, art_url
 
 
-worker, bore, cf, host, art_url = start_all()
+worker, bore, bore_art, host, art_url = start_all()
 print("=" * 62)
 print("PYTHON_WORKER_HOST=" + host)
 print("BM_WORKER_ARTIFACT_BASE=" + art_url)
@@ -132,10 +131,10 @@ print("=" * 62)
 try:
     while True:
         time.sleep(30)
-        if worker.poll() is not None or bore.poll() is not None or cf.poll() is not None:
+        if worker.poll() is not None or bore.poll() is not None or bore_art.poll() is not None:
             print("algo murió; relanzando worker + túneles...")
             try:
-                worker, bore, cf, host, art_url = start_all()
+                worker, bore, bore_art, host, art_url = start_all()
                 print("re-anunciado:", host)
             except Exception:
                 # wait_for puede agotar 40s si bore.pub/cloudflared titubea:
@@ -145,5 +144,5 @@ try:
                 print("relanzamiento falló; reintento en el próximo ciclo")
 except KeyboardInterrupt:
     print("deteniendo...")
-    for p in (worker, bore, cf):
+    for p in (worker, bore, bore_art):
         p.terminate()

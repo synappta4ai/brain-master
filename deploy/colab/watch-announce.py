@@ -8,6 +8,7 @@ ellas, delegando en connect-gateway.ps1 (que ademas recompila el binario).
 Validaciones anti-basura (ignora announces rotos o viejos):
   - PYTHON_WORKER_HOST tipo bore.pub:<puerto> con puerto en 1024-65535
   - BM_WORKER_ARTIFACT_BASE tipo https://<algo>.trycloudflare.com
+    o http://bore.pub:<puerto> (variante Kaggle sin cloudflared)
   - announce con mas de STALE_SECS de antiguedad se ignora (sesion muerta)
   - nunca procesa dos veces el mismo announce (compara timestamp)
 
@@ -69,7 +70,11 @@ def parse_and_validate(msg):
     base = data.get("BM_WORKER_ARTIFACT_BASE", "")
     port_str = host.split(":")[-1] if host.startswith("bore.pub:") else ""
     ok_host = port_str.isdigit() and 1024 <= int(port_str) <= 65535
-    ok_base = base.startswith("https://") and base.endswith(".trycloudflare.com")
+    # Base de artefactos: cloudflared (Colab) o segundo bore (Kaggle, donde
+    # la red mata QUIC/UDP de cloudflared).
+    ok_base = (base.startswith("https://") and base.endswith(".trycloudflare.com")) or (
+        base.startswith("http://bore.pub:") and base.split(":")[-1].isdigit()
+    )
     if not (ok_host and ok_base):
         log(f"announce invalido ignorado: {host!r} | {base!r}")
         return None
@@ -81,24 +86,22 @@ def parse_and_validate(msg):
 
 
 def reconnect(host, base):
-    log(f"reconectando gateway -> {host} | {base}")
+    log(f"reconectando gateway (background) -> {host} | {base}")
     if DRY_RUN:
-        log(f"(dry-run) ejecutaria: connect-gateway.ps1 -WorkerHost {host} -ArtifactBase {base}")
+        log(f"(dry-run) ejecutaria: connect-gateway.ps1 -Quick -WorkerHost {host} -ArtifactBase {base}")
         return True
     cmd = [
         "powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
-        "-File", str(PS1), "-WorkerHost", host, "-ArtifactBase", base,
+        "-File", str(PS1), "-Quick", "-WorkerHost", host, "-ArtifactBase", base,
     ]
-    # El ps1 recompila, reinicia, verifica y lanza un job de prueba: puede
-    # tardar ~1-2 min con pesos frios.
-    try:
-        p = subprocess.run(cmd, capture_output=True, text=True, timeout=420)
-        tail = (p.stdout or "").strip().splitlines()
-        log("ps1: " + (tail[-1] if tail else f"exit={p.returncode}"))
-        return p.returncode == 0
-    except subprocess.TimeoutExpired:
-        log("ps1 timeout (420s); el gateway puede haber quedado conectado igual")
-        return False
+    # Detached: el watcher NUNCA espera al ps1 (con el job de prueba podia
+    # quedar bloqueado minutos y perder announces nuevos). El detalle queda
+    # en backend/gateway-reconnect.log.
+    logf = open(REPO / "backend" / "gateway-reconnect.log", "a")
+    flags = 0x00000008 | 0x00000200  # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
+    subprocess.Popen(cmd, stdout=logf, stderr=subprocess.STDOUT, creationflags=flags)
+    log("ps1 lanzado detached (-Quick); detalle en backend/gateway-reconnect.log")
+    return True
 
 
 def main():
