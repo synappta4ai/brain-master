@@ -88,9 +88,12 @@ def announce(host, base):
 
 def start_all():
     """Levanta worker + túneles, anuncia y devuelve (procs, host, base)."""
-    sh("pkill -f 'python server.py' 2>/dev/null; "
-       "pkill -f 'bore local' 2>/dev/null; "
-       "pkill -f cloudflared 2>/dev/null; true")
+    # [x] trick: el regex matchea el proceso real pero NO el shell que
+    # ejecuta este pkill (su cmdline contiene el patron con corchetes).
+    # Sin esto, pkill se mata a si mismo -> SIGTERM -> CalledProcessError.
+    sh("pkill -f '[p]ython server.py' 2>/dev/null; "
+       "pkill -f '[b]ore local' 2>/dev/null; "
+       "pkill -f '[c]loudflared' 2>/dev/null; true")
     time.sleep(2)
     os.environ["BM_OUTPUT_DIR"] = f"{OUT}/outputs"
     os.makedirs(f"{OUT}/outputs", exist_ok=True)
