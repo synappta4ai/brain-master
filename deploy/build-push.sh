@@ -5,16 +5,24 @@
 #   ./deploy/build-push.sh [tag]
 #
 # Requiere: docker login previo. Variables:
-#   REGISTRY  (default: docker.io/TU_USUARIO)
+#   REGISTRY  (obligatorio; ej: docker.io/tuusuario o ghcr.io/usuario)
 #   PLATFORM  (default: linux/amd64 — añade,arm64 para Oracle A1 con la
 #              imagen CPU; buildx lo maneja solo)
 # =============================================================================
 set -euo pipefail
 
 TAG="${1:-latest}"
-REGISTRY="${REGISTRY:-docker.io/TU_USUARIO}"     # ← AJUSTA (o ghcr.io/usuario)
+REGISTRY="${REGISTRY:-}"
 PLATFORM="${PLATFORM:-linux/amd64}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+# Falla temprano y claro en vez de pushear a un registry basura:
+if [[ -z "$REGISTRY" || "$REGISTRY" == *TU_USUARIO* ]]; then
+  echo "✗ REGISTRY no configurado. Uso:" >&2
+  echo "    REGISTRY=docker.io/tuusuario ./deploy/build-push.sh [tag]" >&2
+  echo "  (o ghcr.io/usuario — requiere docker login previo)" >&2
+  exit 1
+fi
 
 echo "» Registry: $REGISTRY  tag: $TAG  platform: $PLATFORM"
 

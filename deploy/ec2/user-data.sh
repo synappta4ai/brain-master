@@ -36,7 +36,7 @@ fi
 # 3. Código y stack
 mkdir -p /opt/brain-master && cd /opt/brain-master
 if [ ! -d brain-master ]; then
-  git clone --depth 1 "${BM_REPO_URL:-https://github.com/TU_USUARIO/brain-master.git}" brain-master
+  git clone --depth 1 "${BM_REPO_URL:-https://github.com/synappta4ai/brain-master.git}" brain-master
 fi
 cd brain-master
 
@@ -52,6 +52,6 @@ curl -s http://127.0.0.1:8080/api/v1/health || true
 echo
 curl -s http://127.0.0.1:8080/api/v1/models | head -c 400 || true
 echo
-echo "Gateway REST+WS: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || echo <IP>):8080"
+echo "Gateway REST+WS: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || echo '<IP>'):8080"
 echo "Front:           http://<IP>:4200"
 echo "=============================================================="
