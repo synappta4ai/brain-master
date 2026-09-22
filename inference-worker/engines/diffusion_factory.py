@@ -12,6 +12,7 @@ carga cacheada, el loop de progreso real, la cancelación y el guardado.
 from __future__ import annotations
 
 import asyncio
+import gc
 import logging
 import os
 import threading
@@ -36,11 +37,38 @@ def _has_cuda() -> bool:
         return False
 
 
+def _release_pipelines() -> int:
+    """Suelta TODOS los pipelines cacheados y limpia cachés de torch.
+
+    Los pipelines viejos quedan referenciados en _PIPELINES para siempre:
+    empty_cache() solo no los libera. Devuelve cuántos se soltaron.
+    """
+    with _LOCK:
+        n = len(_PIPELINES)
+        _PIPELINES.clear()
+    if n:
+        gc.collect()
+        try:
+            import torch
+
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                torch.cuda.ipc_collect()
+        except Exception:
+            pass
+        logger.info("[Factory] %d pipeline(s) cacheados liberados", n)
+    return n
+
+
 def _check_memory_before_load(spec: ModelSpec, use_gpu: bool) -> None:
     """Rechaza el modelo ANTES de descargar pesos si no cabe en la máquina.
 
     Sin este guardia, un modelo 14B en una laptop revienta el proceso con un
     abort de Rust (OOM no capturable) y tumba el worker entero.
+
+    Si no hay espacio, primero suelta pipelines cacheados (un SD-1.5 quedado
+    de un job anterior puede ocupar los GB que este modelo necesita) y vuelve
+    a medir; solo falla si aún así no cabe.
     """
     try:
         import psutil
@@ -48,15 +76,22 @@ def _check_memory_before_load(spec: ModelSpec, use_gpu: bool) -> None:
         avail_gb = psutil.virtual_memory().available / 1024**3
     except Exception:
         return
-    # Regla práctica: en GPU el modelo vive en VRAM (se descarga a disco igual
-    # al cargar); en CPU carga entero en RAM. Exigimos margen x1.5.
-    need_gb = spec.vram_gb * 1.5 if use_gpu else spec.vram_gb * 1.5
+    # CPU: el modelo vive entero en RAM (margen x1.5). GPU con cpu-offload:
+    # los pesos residen en RAM y fluyen a VRAM por etapas (margen x1.1; el
+    # x1.5 original hacia imposible cargar Wan-1.3B en Colab con 12.7 GB).
+    need_gb = spec.vram_gb * (1.1 if use_gpu else 1.5)
     if avail_gb < need_gb:
-        raise MemoryError(
-            f"el modelo '{spec.label}' requiere ~{spec.vram_gb} GB y solo hay "
-            f"{avail_gb:.1f} GB disponibles. Usa un modelo más pequeño o una "
-            "máquina con más memoria."
-        )
+        _release_pipelines()
+        try:
+            avail_gb = psutil.virtual_memory().available / 1024**3
+        except Exception:
+            return
+        if avail_gb < need_gb:
+            raise MemoryError(
+                f"el modelo '{spec.label}' requiere ~{spec.vram_gb} GB y solo hay "
+                f"{avail_gb:.1f} GB disponibles. Usa un modelo más pequeño o una "
+                "máquina con más memoria."
+            )
 
 
 # ----------------------------------------------------------------------

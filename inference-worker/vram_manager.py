@@ -28,7 +28,15 @@ class VRAMManager:
         total = torch.cuda.get_device_properties(device).total_memory // (1024 * 1024)
         allocated = torch.cuda.memory_allocated(device) // (1024 * 1024)
         reserved = torch.cuda.memory_reserved(device) // (1024 * 1024)
-        free = total - reserved
+        # Libre REAL visible para nuevos modelos: mem_get_info consulta al
+        # driver (descuenta lo reservado por otros procesos). total-reserved
+        # mentía: reportaba 14.9 GB libres con la VM recién iniciada mientras
+        # el driver ya tenía comprometidos ~7.5 GB.
+        try:
+            free_driver, _total_driver = torch.cuda.mem_get_info(device)
+            free = free_driver // (1024 * 1024)
+        except Exception:
+            free = total - reserved
         
         return {
             "device_name": torch.cuda.get_device_name(device),
