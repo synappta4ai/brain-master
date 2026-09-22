@@ -36,7 +36,11 @@ def sh(cmd):
 
 
 # ---------------------------------------------------------------- 1. código
-if not os.path.isdir(WORKER_DIR):
+# El disco (/kaggle/working) sobrevive a reinicios de sesión: sin este pull
+# el clon quedaría con código viejo para siempre.
+if os.path.isdir("/kaggle/working/brain-master/.git"):
+    sh(["git", "-C", "/kaggle/working/brain-master", "pull", "--ff-only"])
+elif not os.path.isdir(WORKER_DIR):
     sh(["git", "clone", "--depth", "1", REPO_URL, "/kaggle/working/brain-master"])
 os.chdir(WORKER_DIR)
 
@@ -44,7 +48,7 @@ os.chdir(WORKER_DIR)
 sh([sys.executable, "-m", "pip", "install", "-q",
     "grpcio==1.84.0", "grpcio-tools==1.84.0", "protobuf>=5.29.3",
     "diffusers>=0.36.0", "transformers>=4.57.0", "tokenizers",
-    "accelerate", "safetensors", "sentencepiece", "einops",
+    "accelerate", "bitsandbytes", "safetensors", "sentencepiece", "einops",
     "open_clip_torch", "imageio", "imageio-ffmpeg", "Pillow",
     "psutil"])
 
