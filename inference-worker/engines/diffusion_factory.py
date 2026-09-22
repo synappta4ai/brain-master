@@ -147,11 +147,41 @@ def _load_video_pipeline(repo: str, use_gpu: bool, dtype_str: str):
         raise ValueError(f"familia de video no soportada para {repo}")
 
     logger.info("[Factory] Cargando video %s (gpu=%s, %s)...", repo, use_gpu, dtype_str)
-    pipe = cls.from_pretrained(repo, torch_dtype=dtype)
+    # Los repos Diffusers sirven los text encoders en fp32 (el UMT5-XXL de
+    # Wan: 21 GB de los ~27 del repo). Cuantizarlo a 4-bit es lo que hace
+    # que Wan-1.3B quepa (~13.5 GB → ~6 GB): sin esto, una T4/Colab (10 GB
+    # de RAM) nunca puede cargarlo. Los pesos 4-bit viven en GPU, así que
+    # el pipeline corre sin cpu-offload (además, más rápido).
+    te_quant = False
+    kwargs = {"torch_dtype": dtype}
+    if use_gpu and "wan" in lower:
+        try:
+            import bitsandbytes  # noqa: F401
+
+            from transformers import BitsAndBytesConfig
+
+            kwargs["text_encoder_quant_config"] = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.float16,
+                bnb_4bit_quant_type="nf4",
+            )
+            te_quant = True
+            logger.info("[Factory] text encoder a 4-bit (nf4): ahorra ~18 GB")
+        except ImportError:
+            raise RuntimeError(
+                "Wan en GPU requiere 'bitsandbytes' (cuantiza el text encoder "
+                "de 21 GB fp32 a ~2.5 GB); instalalo y reintenta"
+            )
+    pipe = cls.from_pretrained(repo, **kwargs)
     # Los videos son pesados: offload siempre que exista; en CPU es lo único
     # que cabe junto con attention slicing.
     if use_gpu:
-        pipe.enable_model_cpu_offload()
+        if te_quant:
+            # bnb 4-bit no soporta moverse CPU<->GPU: el pipeline entero se
+            # queda en VRAM (cabe: ese es justo el objetivo de cuantizar).
+            logger.info("[Factory] %s en VRAM completa (sin offload)", repo)
+        else:
+            pipe.enable_model_cpu_offload()
     else:
         pipe.enable_attention_slicing()
         pipe.enable_vae_slicing()

@@ -23,7 +23,9 @@ class TestCatalog:
             if s.mode == "video" and s.engine == "diffusers"
         ]
         assert len(video) >= 3
-        assert all(s.vram_gb >= 10 for s in video)
+        # Wan-1.3B queda en 6 tras cuantizar su text encoder a 4-bit (era 10);
+        # los demás videos reales siguen pesando >= 12.
+        assert all(s.vram_gb >= 6 for s in video)
 
     def test_every_spec_declares_pipeline_and_family(self):
         for key, spec in MODEL_CATALOG.items():

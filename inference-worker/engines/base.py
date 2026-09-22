@@ -142,7 +142,9 @@ MODEL_CATALOG: dict[str, ModelSpec] = {
         label="Wan 2.1 T2V 1.3B (video ligero)",
         engine="diffusers", repo="Wan-AI/Wan2.1-T2V-1.3B-Diffusers",
         mode="video", pipeline="wan", dtype="float16",
-        steps=30, guidance_scale=5.0, max_side=480, vram_gb=10, family="wan",
+        # 10 era el spec fp16 del modelo entero; con el text encoder cuantizado
+        # a 4-bit (pico real en VRAM) alcanza de sobra en la T4 de Colab.
+        steps=30, guidance_scale=5.0, max_side=480, vram_gb=6, family="wan",
     ),
     "Wan2.1-T2V-14B": ModelSpec(
         key="Wan2.1-T2V-14B",
