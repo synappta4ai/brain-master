@@ -5,6 +5,15 @@
 2. **API Gateway & Orquestador:** Go (HTTP REST, WebSocket Hub & Queue Manager)
 3. **Motor de Inferencia IA:** Python (PyTorch, Diffusers, CUDA Kernels & VRAM Sentinel)
 
+> **Consumidores del worker:** este repo es el motor de inferencia del
+> ecosistema. Hoy tiene dos consumidores: el gateway legado de este repo
+> (`backend/`, :8080) y **back-synapta** (API de producción, :8099), que
+> despacha los modelos `downloaded` por gRPC (`BM_WORKER_ADDR`) y re-hospeda
+> los artefactos. Guía para agentes: [`AGENTS.md`](AGENTS.md) · Detalle de la
+> capa 3: [`inference-worker/README.md`](inference-worker/README.md) · Plan
+> "worker local como proveedor":
+> [`PLAN_WORKER_LOCAL_PROVEEDOR.md`](PLAN_WORKER_LOCAL_PROVEEDOR.md).
+
 ---
 
 ## 📁 Estructura del Proyecto

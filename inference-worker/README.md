@@ -2,6 +2,37 @@
 
 Este microservicio constituye la **Capa 3** de la arquitectura híbrida de **Brain-Master**. Es un servicio _headless_ (sin interfaz web acoplada) responsable de ejecutar los modelos de difusión de video, generación de imágenes, transcripción de audio y orquestación de LLMs en hardware GPU.
 
+> **Es la pieza que corre a la par del back y del front.** Tiene **dos
+> consumidores**: el gateway propio de brain-master (`backend/`, :8080, usado
+> por el studio legado) y **back-synapta** (:8099, la API de producción), que
+> despacha aquí los modelos `downloaded` por gRPC y re-hospeda los artefactos
+> en `/outputs`. Corre donde haya GPU: tu workstation (costo eléctrico),
+> una GPU dedicada alquilada, o gratis en Colab/Kaggle vía túnel (ver
+> `../deploy/README.md`).
+
+## 🏗️ Arquitectura interna (engines)
+
+```
+server.py (gRPC :50051) ──► engines/registry.py ──► engine según MODEL_CATALOG
+                                   │                    ├── mock            (sin pesos, determinista)
+                                   │                    ├── diffusion_factory (genérico Diffusers, default)
+                                   │                    ├── v1_bridge        (código V1 legado)
+                                   │                    └── diffusers_engine (monolítico, deprecado)
+artifact_server.py (:50052) ── publica los archivos generados (workers remotos)
+vram_manager.py ─────────────── telemetría VRAM + torch.cuda.empty_cache()
+```
+
+- **Fuente única de modelos**: `engines/base.py` → `MODEL_CATALOG` (spec
+  declarativa: repo HF, steps, guidance, dtype, VRAM estimada). `ListModels`
+  y el catálogo de back-synapta salen de acá — **agregar un modelo = agregar
+  una entrada** (más el pipeline en la factoría si no existe).
+- **Flujo de un job**: `GenerateMedia` emite
+  `LOADING_MODEL → GENERATING* → POSTPROCESSING → COMPLETED/FAILED` con
+  cancelación cooperativa (`asyncio.Event`) y escribe el artefacto en
+  `BM_OUTPUT_DIR` (default `../backend/outputs`).
+- **Interruptores**: `BM_FORCE_MOCK=1` (fuerza mock, tests/diagnóstico),
+  `BM_USE_DIFFUSERS_ENGINE=1` (motor legado).
+
 ---
 
 ## 🎯 ¿Qué hace este servicio?
@@ -105,6 +136,25 @@ python server.py
 🧠 [Brain-Master] Worker de Inferencia Python listo.
 Telemetría: {'device_name': 'NVIDIA GeForce RTX 4090', 'total_vram_mb': 24564, 'free_vram_mb': 23100, ...}
 ```
+
+---
+
+## 🔌 Integración con Synapta (back-synapta)
+
+back-synapta consume este worker **en vivo y sin caché** (cliente gRPC
+stateless, `internal/worker`):
+
+| Variable (en `.env` de back-synapta) | Efecto |
+|---|---|
+| `BM_WORKER_ADDR=host:port` | gRPC del worker; con prefijo `tls://` para túneles cloudflared |
+| `BM_WORKER_TIMEOUT_SECONDS=6` | timeout por llamada (lecturas de catálogo son por llamada) |
+| `BM_WORKER_ARTIFACT_BASE=https://…` | URL base para re-hospedar artefactos de workers remotos |
+
+- E2E cross-language (worker real + back real):
+  `BM_E2E_WORKER_ADDR=127.0.0.1:50051 BM_E2E_ARTIFACT_BASE=http://127.0.0.1:50052 go test ./internal/modules/agency/video/ -run TestE2EWorker -v` (desde back-synapta).
+- Mock rápido sin GPU: `BM_ARTIFACT_PORT=50052 py -3 run_mock.py`.
+- Cambios de contrato: editar `../proto/inference.proto` y regenerar TAMBIÉN
+  `back-synapta/internal/worker/proto/` (espejo del código generado).
 
 ---
 

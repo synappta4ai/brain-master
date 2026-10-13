@@ -24,7 +24,7 @@ backend/outputs/*
 !backend/outputs/.gitkeep
 
 # Python / IA Models
-inference-worker/__pycache__/
+__pycache__/
 inference-worker/.venv/
 inference-worker/models/
 *.safetensors
